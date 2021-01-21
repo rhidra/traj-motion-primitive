@@ -1,1 +1,1 @@
-# traj-motion-primitive
+# UAV Motion Primitive Trajectory Generation
