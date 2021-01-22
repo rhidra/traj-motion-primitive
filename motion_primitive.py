@@ -290,7 +290,7 @@ class StateFeasibilityResult:
         return "Unknown"
             
 
-class RapidTrajectory:
+class MotionPrimitive:
     """Rapid quadrocopter trajectory generator.
 
     A quadrocopter state interception trajectory. The trajectory starts at a
@@ -340,6 +340,7 @@ class RapidTrajectory:
         self._axis = [SingleAxisTrajectory(pos0[i],vel0[i],acc0[i]) for i in range(3)]
         self._grav = gravity
         self._tf = None
+        self._cost = np.inf
         self.reset()
 
     def set_goal_position(self, pos):
@@ -585,7 +586,7 @@ class RapidTrajectory:
 
     def get_position(self, t):
         ''' Return the trajectory's 3D position value at time `t`.'''
-        return np.array([self._axis[i].get_position(t) for i in range(3)])
+        return np.array([self._axis[i].get_position(t) for i in range(3)]).T
 
     def get_normal_vector(self, t):
         """ Return the vehicle's normal vector at time `t`.
@@ -650,7 +651,7 @@ class RapidTrajectory:
             return np.array([0,0,0])
 
 
-    def get_cost(self):
+    def compute_cost(self, goal, edt):
         """ Return the total trajectory cost.
 
         Returns the total trajectory cost. Trajectories with higher cost will 
@@ -658,7 +659,25 @@ class RapidTrajectory:
         this is a cheap way to compare two trajectories.
 
         """
-        return self._axis[0].get_cost() + self._axis[1].get_cost() + self._axis[2].get_cost() 
+        # return self._axis[0].get_cost() + self._axis[1].get_cost() + self._axis[2].get_cost() 
+
+        samplingCollision = 10
+        t = np.linspace(0, self._tf, samplingCollision)
+        pos = self.get_position(t).astype(np.int)
+        pos[:, 0] = np.clip(pos[:, 0], 0, edt.shape[0] - 1)
+        pos[:, 1] = np.clip(pos[:, 1], 0, edt.shape[1] - 1)
+        collisionCost = np.sum(1 / edt[pos[:, 0], pos[:, 1]]) * self._tf / samplingCollision
+
+        if collisionCost == np.inf:
+            self._cost = collisionCost
+            return self._cost
+
+        finalPos = self.get_position(self._tf)
+        G = np.array([goal[0], goal[1], 2])
+        distCost = np.linalg.norm(G - finalPos)
+
+        self._cost = 1 * distCost + 10 * collisionCost
+        return self._cost
 
     def get_param_alpha(self, axNum):
         """Return the three parameters alpha which defines the trajectory."""
