@@ -1,4 +1,4 @@
-import numpy as np, math, sys, time, matplotlib.pyplot as plt
+import numpy as np, math, sys, time, matplotlib.pyplot as plt, scipy.interpolate, scipy.ndimage
 from noise import pnoise2
 from functools import reduce
 from utils import dist, Node, lineOfSight, phi, lineOfSightNeighbors, corners, pathLength, updateGridBlockedCells, NoPathFound
@@ -159,8 +159,18 @@ def main():
     grid_obs[grid_obs > OBSTACLE_THRESHOLD] = Node.OBSTACLE
     grid_obs[grid_obs <= OBSTACLE_THRESHOLD] = Node.FREE
     grid_obs[start], grid_obs[goal[0]-1, goal[1]-1] = Node.FREE, Node.FREE
+
+    path = phi_star(start, goal, grid_obs)
     
-    return phi_star(start, goal, grid_obs), grid_obs, start, goal
+    # Upsample to reduce the closeness of the obstacles to the path
+    # This is equivalent to artificially increasing the expected size
+    # of the obstacles for the global planning algorithm
+    UPSCALING_FACTOR = 4
+    new_grid = grid_obs.repeat(UPSCALING_FACTOR, axis=0).repeat(UPSCALING_FACTOR, axis=1)
+    new_grid = scipy.ndimage.binary_erosion(new_grid, structure=np.ones((6, 6))).astype(new_grid.dtype)
+    path = np.array([p.pos for p in path]) * UPSCALING_FACTOR
+
+    return path, new_grid, start, goal
 
 
 if __name__ == '__main__':

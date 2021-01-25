@@ -2,9 +2,10 @@ import numpy as np, matplotlib.pyplot as plt, math, plot
 from motion_primitive import MotionPrimitive
 from phi_star import main as phi_star_gen
 from utils import over_sampling, Node, dist
+from local_goal_extractor import LocalGoalExtractor
 np.seterr(divide='ignore')
 
-OBSTACLE_DISTANCE_THRESHOLD = 5
+OBSTACLE_DISTANCE_THRESHOLD = 10
 Tf = 1
 
 def generateTraj(pos0, vel0, acc0, velf):
@@ -16,14 +17,14 @@ def generateTraj(pos0, vel0, acc0, velf):
 
 def generateTrajLibrary(pos0, vel0, acc0):
     numAngleVariation = 21
-    numNormVariation = 8
+    numNormVariation = 10
 
     theta0 = math.atan2(vel0[1], vel0[0])
     norm0 = np.sqrt(vel0[0]*vel0[0] + vel0[1]*vel0[1])
 
     trajs = []
     for theta in np.linspace(theta0 - np.pi*.45, theta0 + np.pi*.45, numAngleVariation):
-        for norm in np.linspace(np.clip(norm0 - 4, 0, 1e5), norm0 + 4, numNormVariation):
+        for norm in np.linspace(np.clip(norm0 - 2, 0, 1e5), norm0 + 4, numNormVariation):
             trajs.append(generateTraj(pos0, vel0, acc0, [norm * np.cos(theta), norm * np.sin(theta), vel0[2]]))
     # for velz in np.linspace(vel0[2] - velzOffset, vel0[2] + velzOffset, numTrajs):
 
@@ -52,30 +53,42 @@ def euclideanDistanceTransform(grid_obs):
 def main():
     path, grid_obs, start, goal = phi_star_gen()
 
-    path = np.array(over_sampling([p.pos for p in path], max_length=1))
+    # path = np.array(over_sampling([p.pos for p in path], max_length=1))
+    # path = np.array([p.pos for p in path])
+    path = np.concatenate((path, np.array([2] * len(path)).reshape(-1, 1)), axis=1)
     edt = euclideanDistanceTransform(grid_obs)
 
     pos0 = [0, 0, 2]
     vel0 = [.1, .1, 0]
     acc0 = [0, 0, 0]
 
-    for pt in path[1:]:
+    localGoalExtractor = LocalGoalExtractor(path, initPos=pos0, initVel=vel0)
+    previousTraj = []
+
+    for goalLocal in localGoalExtractor:
         trajs = generateTrajLibrary(pos0, vel0, acc0)
-        goalLocal = [pt[0], pt[1], 2]
 
         for traj in trajs:
             traj.compute_cost(goalLocal, edt)
 
         trajSelected = min(trajs, key=lambda t: t._cost)
 
+        if trajSelected._cost == np.inf:
+            plot.display(start, goal, grid_obs, globalPath=path, trajLibrary=trajs, point=goalLocal, tf=Tf)
+            raise ValueError('Cannot find an appropriate trajectory')
+        
         pos0 = trajSelected.get_position(Tf)
         vel0 = trajSelected.get_velocity(Tf)
         acc0 = trajSelected.get_acceleration(Tf)
 
+        localGoalExtractor.setPosition(pos0)
+        localGoalExtractor.setVelocity(vel0)
+
         # Test input feasibility
         # inputsFeasible = traj.check_input_feasibility(fmin, fmax, wmax, minTimeSec)
 
-        plot.display(start, goal, grid_obs, globalPath=path, trajLibrary=trajs, trajSelected=trajSelected, tf=Tf)
+        plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajSelected=trajSelected, trajHistory=previousTraj, point=goalLocal, tf=Tf)
+        previousTraj.append(trajSelected)
 
 
 if __name__ == '__main__':

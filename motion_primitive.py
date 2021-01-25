@@ -673,9 +673,8 @@ class MotionPrimitive:
             return self._cost
 
         finalPos = self.get_position(self._tf)
-        G = np.array([goal[0], goal[1], 2])
-        distCost = np.linalg.norm(G - finalPos)
-
+        distCost = np.linalg.norm(goal - finalPos)
+        
         self._cost = 1 * distCost + 10 * collisionCost
         return self._cost
 
