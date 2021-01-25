@@ -31,7 +31,6 @@ def children(node, grid, obs, crossbar=True, checkLOS=True):
 
 
 def pathTie(node, current):
-    return False
     angle = abs(phi(current.parent, current, node))
     return math.isclose(angle, 180, abs_tol=1e-6)
     
