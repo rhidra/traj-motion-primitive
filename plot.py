@@ -5,7 +5,7 @@ fig, ax = plt.subplots()
 
 getPos = lambda x: x.pos if isinstance(x, Node) else x
 
-def display(start=None, goal=None, grid_obs=[], edt=[], globalPath=[], trajLibrary=[], trajSelected=None, trajHistory=[], point=None, tf=1, hold=False):
+def display(start=None, goal=None, grid_obs=[], edt=None, globalPath=[], trajLibrary=[], trajSelected=None, trajHistory=[], point=None, tf=1, hold=False):
     print('Plotting...')
     ax.clear()
     ax.set_xlim(-0.5, grid_obs.shape[0])
@@ -19,7 +19,8 @@ def display(start=None, goal=None, grid_obs=[], edt=[], globalPath=[], trajLibra
     # obs = [patches.Rectangle([x, y], w, h) for x, y, w, h in extractRect(grid_obs)]
     ax.add_collection(collections.PatchCollection(obs))
 
-    ax.imshow(edt, alpha=.3)
+    if edt is not None:
+        ax.imshow(edt, alpha=.3)
 
     if start is not None:
         ax.add_patch(patches.Circle(getPos(start), .3, linewidth=1, facecolor='green'))

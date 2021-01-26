@@ -1,4 +1,4 @@
-import numpy as np, math, sys, time, matplotlib.pyplot as plt, scipy.interpolate, scipy.ndimage
+import numpy as np, math, sys, time, matplotlib.pyplot as plt, scipy.interpolate, scipy.ndimage, plot
 from noise import pnoise2
 from functools import reduce
 from utils import dist, Node, lineOfSight, phi, lineOfSightNeighbors, corners, pathLength, updateGridBlockedCells, NoPathFound
@@ -9,11 +9,11 @@ from config import *
 H_COST_WEIGHT = 1.7
 
 # Parameters for map generation with Perlin noise
-WIDTH = 50
-HEIGHT = 50
+WIDTH = 100
+HEIGHT = 100
 OBSTACLE_THRESHOLD = .2
-OBSTACLE_X_SIZE = 6
-OBSTACLE_Y_SIZE = 6
+OBSTACLE_X_SIZE = 10
+OBSTACLE_Y_SIZE = 10
 OBSTACLE_X_OFFSET = 0
 OBSTACLE_Y_OFFSET = 0
 
@@ -170,7 +170,9 @@ def main():
     new_grid = scipy.ndimage.binary_erosion(new_grid, structure=np.ones((6, 6))).astype(new_grid.dtype)
     path = np.array([p.pos for p in path]) * UPSCALING_FACTOR
     goal = (goal[0]*UPSCALING_FACTOR, goal[1]*UPSCALING_FACTOR)
+    start = (start[0]*UPSCALING_FACTOR, start[1]*UPSCALING_FACTOR)
     print('Upscaling done')
+    plot.display(start, goal, new_grid)
 
     return path, new_grid, start, goal
 
