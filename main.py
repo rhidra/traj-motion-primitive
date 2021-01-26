@@ -57,6 +57,7 @@ def main():
     # path = np.array([p.pos for p in path])
     path = np.concatenate((path, np.array([2] * len(path)).reshape(-1, 1)), axis=1)
     edt = euclideanDistanceTransform(grid_obs)
+    print('EDT done')
 
     pos0 = [0, 0, 2]
     vel0 = [.1, .1, 0]
@@ -65,7 +66,7 @@ def main():
     localGoalExtractor = LocalGoalExtractor(path, initPos=pos0, initVel=vel0)
     previousTraj = []
 
-    for goalLocal in localGoalExtractor:
+    for i, goalLocal in enumerate(localGoalExtractor):
         trajs = generateTrajLibrary(pos0, vel0, acc0)
 
         for traj in trajs:
@@ -74,7 +75,7 @@ def main():
         trajSelected = min(trajs, key=lambda t: t._cost)
 
         if trajSelected._cost == np.inf:
-            plot.display(start, goal, grid_obs, globalPath=path, trajLibrary=trajs, point=goalLocal, tf=Tf)
+            plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajHistory=previousTraj, point=goalLocal, tf=Tf)
             raise ValueError('Cannot find an appropriate trajectory')
         
         pos0 = trajSelected.get_position(Tf)
@@ -87,7 +88,8 @@ def main():
         # Test input feasibility
         # inputsFeasible = traj.check_input_feasibility(fmin, fmax, wmax, minTimeSec)
 
-        plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajSelected=trajSelected, trajHistory=previousTraj, point=goalLocal, tf=Tf)
+        if i % 10 == 0:
+            plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajSelected=trajSelected, trajHistory=previousTraj, point=goalLocal, tf=Tf)
         previousTraj.append(trajSelected)
 
 

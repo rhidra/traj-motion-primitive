@@ -9,8 +9,8 @@ from config import *
 H_COST_WEIGHT = 1.7
 
 # Parameters for map generation with Perlin noise
-WIDTH = 20
-HEIGHT = 20
+WIDTH = 50
+HEIGHT = 50
 OBSTACLE_THRESHOLD = .2
 OBSTACLE_X_SIZE = 6
 OBSTACLE_Y_SIZE = 6
@@ -160,6 +160,7 @@ def main():
     grid_obs[start], grid_obs[goal[0]-1, goal[1]-1] = Node.FREE, Node.FREE
 
     path = phi_star(start, goal, grid_obs)
+    print('Phi* done')
     
     # Upsample to reduce the closeness of the obstacles to the path
     # This is equivalent to artificially increasing the expected size
@@ -168,6 +169,8 @@ def main():
     new_grid = grid_obs.repeat(UPSCALING_FACTOR, axis=0).repeat(UPSCALING_FACTOR, axis=1)
     new_grid = scipy.ndimage.binary_erosion(new_grid, structure=np.ones((6, 6))).astype(new_grid.dtype)
     path = np.array([p.pos for p in path]) * UPSCALING_FACTOR
+    goal = (goal[0]*UPSCALING_FACTOR, goal[1]*UPSCALING_FACTOR)
+    print('Upscaling done')
 
     return path, new_grid, start, goal
 

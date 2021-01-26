@@ -35,7 +35,7 @@ class LocalGoalExtractor:
             raise ValueError('Cannot solve Segment/Sphere intersection during local goal extraction (delta={})'.format(delta))
 
         # Forward projection in the path
-        proj = forwardProject(posProj, segIdx, self.path, distance=1.5*np.linalg.norm(self.vel))
+        proj = forwardProject(posProj, segIdx, self.path, distance=1*np.linalg.norm(self.vel))
         return proj
 
     def setPosition(self, pos):

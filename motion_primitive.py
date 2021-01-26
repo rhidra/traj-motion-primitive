@@ -661,7 +661,7 @@ class MotionPrimitive:
         """
         # return self._axis[0].get_cost() + self._axis[1].get_cost() + self._axis[2].get_cost() 
 
-        samplingCollision = 10
+        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 10, 10, 1e100))
         t = np.linspace(0, self._tf, samplingCollision)
         pos = self.get_position(t).astype(np.int)
         pos[:, 0] = np.clip(pos[:, 0], 0, edt.shape[0] - 1)

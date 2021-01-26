@@ -6,6 +6,7 @@ fig, ax = plt.subplots()
 getPos = lambda x: x.pos if isinstance(x, Node) else x
 
 def display(start=None, goal=None, grid_obs=[], edt=[], globalPath=[], trajLibrary=[], trajSelected=None, trajHistory=[], point=None, tf=1, hold=False):
+    print('Plotting...')
     ax.clear()
     ax.set_xlim(-0.5, grid_obs.shape[0])
     ax.set_ylim(-0.5, grid_obs.shape[0])
@@ -29,10 +30,10 @@ def display(start=None, goal=None, grid_obs=[], edt=[], globalPath=[], trajLibra
         ax.plot(globalPath[:, 0], globalPath[:, 1], 'o-', color='red', markersize=5)
     
     t = np.linspace(0, tf, 100)
-    maxCost = np.max([traj._cost for traj in trajLibrary if traj._cost != np.inf])
+    maxCost = np.max([traj._cost for traj in trajLibrary if traj._cost != np.inf] + [0])
     for traj in trajLibrary:
         pos = traj.get_position(t)
-        d = traj._cost/maxCost if traj._cost < maxCost else 1
+        d = traj._cost / maxCost if traj._cost < maxCost else 1
         c = np.array([0, 255, 0]) * (1 - d) + np.array([255, 0, 0]) * d
         ax.plot(pos[:, 0], pos[:, 1], color=c / 255, alpha=.01 if traj._cost == np.inf else .5)
 
