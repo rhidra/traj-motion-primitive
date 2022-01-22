@@ -165,14 +165,14 @@ def main():
     # Upsample to reduce the closeness of the obstacles to the path
     # This is equivalent to artificially increasing the expected size
     # of the obstacles for the global planning algorithm
-    UPSCALING_FACTOR = 4
+    UPSCALING_FACTOR = 2
     new_grid = grid_obs.repeat(UPSCALING_FACTOR, axis=0).repeat(UPSCALING_FACTOR, axis=1)
     new_grid = scipy.ndimage.binary_erosion(new_grid, structure=np.ones((6, 6))).astype(new_grid.dtype)
     path = np.array([p.pos for p in path]) * UPSCALING_FACTOR
     goal = (goal[0]*UPSCALING_FACTOR, goal[1]*UPSCALING_FACTOR)
     start = (start[0]*UPSCALING_FACTOR, start[1]*UPSCALING_FACTOR)
     print('Upscaling done')
-    plot.display(start, goal, new_grid)
+    # plot.display(start, goal, new_grid)
 
     return path, new_grid, start, goal
 

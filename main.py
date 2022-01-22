@@ -30,6 +30,7 @@ def generateTrajLibrary(pos0, vel0, acc0):
 
     return trajs
 
+# Naive way to compute the EDT, very slow and unoptimized
 def euclideanDistanceTransform(grid_obs):
     edt = np.zeros(grid_obs.shape)
     x, y = np.meshgrid(np.arange(grid_obs.shape[0]), np.arange(grid_obs.shape[1]))
@@ -66,31 +67,35 @@ def main():
     localGoalExtractor = LocalGoalExtractor(path, initPos=pos0, initVel=vel0)
     previousTraj = []
 
-    for i, goalLocal in enumerate(localGoalExtractor):
-        trajs = generateTrajLibrary(pos0, vel0, acc0)
+    try:
+        for i, goalLocal in enumerate(localGoalExtractor):
+            trajs = generateTrajLibrary(pos0, vel0, acc0)
 
-        for traj in trajs:
-            traj.compute_cost(goalLocal, edt)
+            for traj in trajs:
+                traj.compute_cost(goalLocal, edt)
 
-        trajSelected = min(trajs, key=lambda t: t._cost)
+            trajSelected = min(trajs, key=lambda t: t._cost)
 
-        if trajSelected._cost == np.inf:
-            plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajHistory=previousTraj, point=goalLocal, tf=Tf)
-            raise ValueError('Cannot find an appropriate trajectory')
-        
-        pos0 = trajSelected.get_position(Tf)
-        vel0 = trajSelected.get_velocity(Tf)
-        acc0 = trajSelected.get_acceleration(Tf)
+            if trajSelected._cost == np.inf:
+                plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajHistory=previousTraj, point=goalLocal, tf=Tf)
+                raise ValueError('Cannot find an appropriate trajectory')
+            
+            pos0 = trajSelected.get_position(Tf)
+            vel0 = trajSelected.get_velocity(Tf)
+            acc0 = trajSelected.get_acceleration(Tf)
 
-        localGoalExtractor.setPosition(pos0)
-        localGoalExtractor.setVelocity(vel0)
+            localGoalExtractor.setPosition(pos0)
+            localGoalExtractor.setVelocity(vel0)
 
-        # Test input feasibility
-        # inputsFeasible = traj.check_input_feasibility(fmin, fmax, wmax, minTimeSec)
+            # Test input feasibility
+            # inputsFeasible = traj.check_input_feasibility(fmin, fmax, wmax, minTimeSec)
 
-        if i % 10 == 0:
-            plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajSelected=trajSelected, trajHistory=previousTraj, point=goalLocal, tf=Tf)
-        previousTraj.append(trajSelected)
+            if i % 10 == 0:
+                plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajSelected=trajSelected, trajHistory=previousTraj, point=goalLocal, tf=Tf)
+            previousTraj.append(trajSelected)
+    except:
+        plot.display(start, goal, grid_obs, edt=edt, globalPath=path, trajLibrary=trajs, trajSelected=trajSelected, trajHistory=previousTraj, point=goalLocal, tf=Tf, hold=True)
+
 
 
 if __name__ == '__main__':

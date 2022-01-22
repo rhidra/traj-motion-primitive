@@ -2,8 +2,8 @@
 H_COST_WEIGHT = 1.7
 
 # Parameters for map generation with Perlin noise
-WIDTH = 20
-HEIGHT = 20
+WIDTH = 10
+HEIGHT = 10
 OBSTACLE_THRESHOLD = .2
 OBSTACLE_X_SIZE = 6
 OBSTACLE_Y_SIZE = 6
